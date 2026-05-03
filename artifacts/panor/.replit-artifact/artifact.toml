@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "PANOR — Clinical Intelligence"
+version = "1.0.0"
+id = "artifacts/panor"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 26210
+
+[services.development]
+run = "pnpm --filter @workspace/panor run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/panor", "run", "build" ]
+publicDir = "artifacts/panor/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "26210"
+BASE_PATH = "/"

@@ -1,0 +1,71 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import "tailwindcss";
+@import "tw-animate-css";
+@plugin "@tailwindcss/typography";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --background: 215 28% 7%;
+  --foreground: 210 20% 92%;
+  --card: 217 27% 10%;
+  --card-foreground: 210 20% 92%;
+  --popover: 217 27% 10%;
+  --popover-foreground: 210 20% 92%;
+  --primary: 199 89% 48%;
+  --primary-foreground: 215 28% 7%;
+  --secondary: 217 20% 16%;
+  --secondary-foreground: 210 20% 80%;
+  --muted: 217 20% 14%;
+  --muted-foreground: 215 15% 55%;
+  --accent: 217 25% 18%;
+  --accent-foreground: 210 20% 92%;
+  --destructive: 0 72% 51%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 217 20% 18%;
+  --input: 217 20% 16%;
+  --ring: 199 89% 48%;
+  --radius: 0.5rem;
+  --chart-1: 199 89% 48%;
+  --chart-2: 142 71% 45%;
+  --chart-3: 38 92% 50%;
+  --chart-4: 0 72% 51%;
+  --chart-5: 270 60% 60%;
+  --sidebar: 215 35% 6%;
+  --sidebar-foreground: 210 15% 80%;
+  --sidebar-border: 217 20% 14%;
+  --sidebar-accent: 217 25% 12%;
+  --sidebar-accent-foreground: 210 20% 92%;
+  --sidebar-primary: 199 89% 48%;
+  --sidebar-primary-foreground: 215 28% 7%;
+  --sidebar-ring: 199 89% 48%;
+}
+
+* {
+  border-color: hsl(var(--border));
+  box-sizing: border-box;
+}
+
+body {
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-family: 'Inter', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+code, .mono {
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+}
+
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: hsl(var(--border)); border-radius: 2px; }
+
+@keyframes pulse-ring {
+  0% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(1.4); opacity: 0; }
+}
+
+.stat-ring {
+  animation: pulse-ring 2s cubic-bezier(0.455, 0.03, 0.515, 0.955) infinite;
+}
