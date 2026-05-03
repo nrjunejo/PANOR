@@ -21,7 +21,7 @@ async function enrichBill(b: typeof billsTable.$inferSelect) {
   };
 }
 
-router.get("/billing", async (req, res) => {
+async function listBills(req: any, res: any) {
   const q = ListBillsQueryParams.safeParse(req.query);
   const { patientId, status } = q.success ? q.data : req.query as any;
   let bills = await db.select().from(billsTable).orderBy(desc(billsTable.createdAt));
@@ -30,7 +30,10 @@ router.get("/billing", async (req, res) => {
   const enriched = await Promise.all(bills.map(enrichBill));
   const total = await db.select({ count: sql<number>`count(*)` }).from(billsTable);
   res.json({ bills: enriched, total: Number(total[0]?.count ?? 0) });
-});
+}
+
+router.get("/billing", listBills);
+router.get("/billing/bills", listBills);
 
 router.post("/billing", async (req, res) => {
   const body = CreateBillBody.safeParse(req.body);

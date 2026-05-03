@@ -165,4 +165,84 @@ Respond ONLY with valid JSON:
   }
 });
 
+// /ai/intake — alias used by PatientDashboard chat
+router.post("/ai/intake", async (req, res) => {
+  const { symptoms, patientId } = req.body;
+  if (!symptoms) { res.status(400).json({ error: "symptoms required" }); return; }
+
+  const patient = patientId
+    ? await db.select().from(patientsTable).where(eq(patientsTable.id, Number(patientId))).limit(1).then(r => r[0])
+    : null;
+
+  const prompt = `You are PANOR AI Health Consultant — a compassionate, medically-trained assistant serving Pakistani patients.
+${patient ? `Patient: ${patient.name}, Blood Group: ${patient.bloodGroup}, Allergies: ${(patient.allergies as string[] ?? []).join(", ") || "None"}` : ""}
+Patient message: "${symptoms}"
+
+Provide a warm, clear health assessment in 2-3 paragraphs:
+1. Acknowledge their concerns and list possible causes
+2. Practical home-care advice and when to seek urgent care
+3. Recommended specialist if needed
+
+Respond in plain text (no JSON). Be empathetic and write clearly for a general audience.`;
+
+  try {
+    const response = await openai.chat.completions.create({
+      model: "gpt-5.4",
+      max_completion_tokens: 500,
+      messages: [{ role: "user", content: prompt }],
+    });
+    res.json({ assessment: response.choices[0]?.message?.content ?? "Unable to process." });
+  } catch {
+    res.json({ assessment: "I'm having trouble connecting right now. Please describe your symptoms to your doctor, or call the emergency line if severe." });
+  }
+});
+
+
+// /ai/drug-check — Drug safety check
+router.post("/ai/drug-check", async (req, res) => {
+  const { medication, patientId } = req.body;
+  if (!medication) { res.status(400).json({ error: "medication required" }); return; }
+
+  const patient = patientId
+    ? await db.select().from(patientsTable).where(eq(patientsTable.id, Number(patientId))).limit(1).then(r => r[0])
+    : null;
+
+  const activePrescriptions = patientId
+    ? await db.select().from(prescriptionsTable).where(eq(prescriptionsTable.patientId, Number(patientId))).then(r => r.filter((p: any) => p.active))
+    : [];
+
+  const prompt = `You are a clinical pharmacology AI safety system.
+Medication to check: "${medication}"
+${patient ? `Patient allergies: ${(patient.allergies as string[] ?? []).join(", ") || "None"}` : ""}
+${activePrescriptions.length ? `Current medications: ${activePrescriptions.map((p: any) => p.medication).join(", ")}` : ""}
+
+Respond ONLY with valid JSON:
+{
+  "safetyStatus": "safe|caution|blocked",
+  "reasoning": "detailed pharmacological reasoning",
+  "interactions": [{"drug": "drug name", "severity": "minor|moderate|major", "description": "interaction description"}],
+  "alternatives": ["alternative medication if blocked"],
+  "confidenceScore": 0.0-1.0
+}`;
+
+  try {
+    const response = await openai.chat.completions.create({
+      model: "gpt-5.4",
+      max_completion_tokens: 600,
+      messages: [{ role: "user", content: prompt }],
+    });
+    const content = response.choices[0]?.message?.content ?? "{}";
+    const cleaned = content.replace(/```json\n?|\n?```/g, "").trim();
+    res.json(JSON.parse(cleaned));
+  } catch {
+    res.json({
+      safetyStatus: "caution",
+      reasoning: "Unable to complete automated drug safety check. Please consult BNF or pharmacist.",
+      interactions: [],
+      alternatives: [],
+      confidenceScore: 0.3,
+    });
+  }
+});
+
 export default router;
